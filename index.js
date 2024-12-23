@@ -26,6 +26,11 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -34,6 +39,18 @@ async function run() {
 const tutorsCollection= client.db('onlineTutor').collection('tutors')
 
 
+app.post('/tutor', async(req, res)=>{
+  const newTutor=req. body
+  console.log(newTutor)
+  const result =await tutorsCollection.insertOne(newTutor)
+  res.send(result)
+})
+
+app.get('/tutor',async(req,res)=>{
+  const cursor= tutorsCollection.find()
+  const result=await cursor.toArray()
+  res.send(result)
+})
 
 
 

@@ -4,7 +4,7 @@ const app = express()
 require ('dotenv').config()
 
 const port = process.env.PORT || 5000
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 app.use(cors())
@@ -39,18 +39,26 @@ async function run() {
 const tutorsCollection= client.db('onlineTutor').collection('tutors')
 
 
-app.post('/tutor', async(req, res)=>{
+app.post('/tutors', async(req, res)=>{
   const newTutor=req. body
   console.log(newTutor)
   const result =await tutorsCollection.insertOne(newTutor)
   res.send(result)
 })
 
-app.get('/tutor',async(req,res)=>{
+app.get('/tutors',async(req,res)=>{
   const cursor= tutorsCollection.find()
   const result=await cursor.toArray()
   res.send(result)
 })
+
+app.get('/tutors/:id', async (req, res) => {
+            
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) }
+  const result = await tutorsCollection.findOne(query);
+  res.send(result);
+     })
 
 
 

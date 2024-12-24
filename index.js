@@ -60,6 +60,14 @@ app.get('/tutors/:email', async (req, res) => {
   res.send(result);
      })
 
+    //  delete
+    app.delete('/tutor/:id', async (req, res) => {
+    const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await tutorsCollection.deleteOne(query);
+      res.send(result);
+  })
+
 
 app.get('/tutors/:id', async (req, res) => {
             

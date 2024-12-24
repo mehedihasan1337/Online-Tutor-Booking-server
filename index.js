@@ -67,6 +67,26 @@ app.get('/tutors/:email', async (req, res) => {
       const result = await tutorsCollection.deleteOne(query);
       res.send(result);
   })
+    //  update
+    app.get('/tutor/:id', async (req, res) => {
+    const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await tutorsCollection.findOne(query);
+      res.send(result);
+  })
+
+  app.put('/update-tutor/:id', async(req, res)=>{
+    const id = req.params.id;
+    const updateTutor=req. body
+    const update={
+      $set: updateTutor,
+    }
+    const query = { _id: new ObjectId(id) }
+    const options={upsert:true}
+    
+    const result =await tutorsCollection.updateOne(query,update,options)
+    res.send(result)
+  })
 
 
 app.get('/tutors/:id', async (req, res) => {

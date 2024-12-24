@@ -51,6 +51,15 @@ app.get('/tutors',async(req,res)=>{
   const result=await cursor.toArray()
   res.send(result)
 })
+// filter by specific user
+
+app.get('/tutors/:email', async (req, res) => {
+ const email = req.params.email;
+  const query = {'buyer.email':email }
+  const result = await tutorsCollection.find(query).toArray();
+  res.send(result);
+     })
+
 
 app.get('/tutors/:id', async (req, res) => {
             

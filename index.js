@@ -90,24 +90,41 @@ async function run() {
       res.send(result)
     })
 
+   
 
+    // app.get('/books', async (req, res) => {
+    //   const cursor = booksCollection.find()
+    //   const result = await cursor.toArray()
+    //   res.send(result)
+    // })
+    // filter by specific user
 
-        // save a bid data in db
-        app.post('/myBook', async (req, res) => {
+    app.get('/books/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = {  email }
+      const result = await booksCollection.find(query).toArray();
+      res.send(result);
+    })
+   
+        app.post('/books', async (req, res) => {
           const bookData = req.body
-          // 0. if a user placed a bid already in this job
           const query = { email: bookData.email, jobId: bookData.jobId }
           const alreadyExist = await booksCollection.findOne(query)
-          console.log('If already exist-->', alreadyExist)
+          console.log('If  already exist-->', alreadyExist)
           if (alreadyExist)
             return res
               .status(400)
-              .send('You have already placed a bid on this job!')
-          // 1. Save data in bids collection
+              .send('You have already booked!')
+        
     
           const result = await booksCollection.insertOne(bookData)
           res.send(result)
         })
+        
+    
+
+
+
 
 
     app.get('/tutors/:id', async (req, res) => {

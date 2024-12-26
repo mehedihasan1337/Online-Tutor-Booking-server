@@ -2,13 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const app = express()
 require('dotenv').config()
-
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const corsOptions = {
+  origin: ['http://localhost:5173'],
+  credentials: true,
+  optionalSuccessStatus: 200,
+}
 
-
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(express.json())
+app.use(cookieParser())
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.2ucux.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -21,6 +27,20 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+// verifyToken
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token
+  if (!token) return res.status(401).send({ message: 'unauthorized access' })
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'unauthorized access' })
+    }
+    req.user = decoded
+  })
+
+  next()
+}
 
 async function run() {
   try {
@@ -37,8 +57,33 @@ async function run() {
 
     //  online_Tutors relative api
     const tutorsCollection = client.db('onlineTutor').collection('tutors')
-    const booksCollection= client.db('onlineTutor').collection('books')
-    
+    const booksCollection = client.db('onlineTutor').collection('books')
+
+
+    // jwt
+    app.post('/jwt', async (req, res) => {
+      const email = req.body
+      const token = jwt.sign(email, process.env.SECRET_KEY, { expiresIn: '5d' })
+      console.log(token)
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      })
+        .send({ success: true })
+    })
+// logout
+app.get('/logout', async (req, res) => {
+  res
+    .clearCookie('token', {
+      maxAge: 0,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    })
+    .send({ success: true })
+})
+
+
 
 
     app.post('/tutors', async (req, res) => {
@@ -55,8 +100,12 @@ async function run() {
     })
     // filter by specific user
 
-    app.get('/tutors/:email', async (req, res) => {
+    app.get('/tutors/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
+      const decodedEmail=req.user?.email
+     
+      if (decodedEmail !== email)
+        return res.status(401).send({ message: 'unauthorized access' })
       const query = { 'buyer.email': email }
       const result = await tutorsCollection.find(query).toArray();
       res.send(result);
@@ -77,7 +126,7 @@ async function run() {
       res.send(result);
     })
 
-    app.put('/update-tutor/:id', async (req, res) => {
+    app.put('/update-tutor/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
       const updateTutor = req.body
       const update = {
@@ -90,31 +139,36 @@ async function run() {
       res.send(result)
     })
 
-   
 
-    app.get('/books/:email', async (req, res) => {
+
+    app.get('/books/:email', verifyToken, async (req, res) => {
+     
       const email = req.params.email;
-      const query = {  email }
+      const decodedEmail=req.user?.email
+      if (decodedEmail !== email)
+        return res.status(401).send({ message: 'unauthorized access' })
+
+      const query = { email }
       const result = await booksCollection.find(query).toArray();
       res.send(result);
     })
-   
-        app.post('/books', async (req, res) => {
-          const bookData = req.body
-          const query = { email: bookData.email, jobId: bookData.jobId }
-          const alreadyExist = await booksCollection.findOne(query)
-          console.log('If  already exist-->', alreadyExist)
-          if (alreadyExist)
-            return res
-              .status(400)
-              .send('You have already booked!')
-        
-    
-          const result = await booksCollection.insertOne(bookData)
-          res.send(result)
-        })
 
-    app.get('/tutors/:id', async (req, res) => {
+    app.post('/books',verifyToken, async (req, res) => {
+      const bookData = req.body
+      const query = { email: bookData.email, jobId: bookData.jobId }
+      const alreadyExist = await booksCollection.findOne(query)
+      console.log('If  already exist-->', alreadyExist)
+      if (alreadyExist)
+        return res
+          .status(400)
+          .send('You have already booked!')
+
+
+      const result = await booksCollection.insertOne(bookData)
+      res.send(result)
+    })
+
+    app.get('/tutors/:id',verifyToken, async (req, res) => {
 
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
@@ -123,15 +177,17 @@ async function run() {
     })
 
     app.get('/findTutors', async (req, res) => {
-         const search =req.query.search
-         const sort =req.query.sort
-        let options={}
-        if(sort)options={sort:{'Price.price':sort==='asc'?1:-1}}
-         let query={language:{
-          $regex:search,$options:'i'
-         }}
+      const search = req.query.search
+      const sort = req.query.sort
+      let options = {}
+      if (sort) options = { sort: { 'Price.price': sort === 'asc' ? 1 : -1 } }
+      let query = {
+        language: {
+          $regex: search, $options: 'i'
+        }
+      }
 
-      const result = await tutorsCollection.find(query,options).toArray()
+      const result = await tutorsCollection.find(query, options).toArray()
       res.send(result)
     })
 

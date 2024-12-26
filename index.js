@@ -92,13 +92,6 @@ async function run() {
 
    
 
-    // app.get('/books', async (req, res) => {
-    //   const cursor = booksCollection.find()
-    //   const result = await cursor.toArray()
-    //   res.send(result)
-    // })
-    // filter by specific user
-
     app.get('/books/:email', async (req, res) => {
       const email = req.params.email;
       const query = {  email }
@@ -120,12 +113,6 @@ async function run() {
           const result = await booksCollection.insertOne(bookData)
           res.send(result)
         })
-        
-    
-
-
-
-
 
     app.get('/tutors/:id', async (req, res) => {
 
@@ -134,6 +121,20 @@ async function run() {
       const result = await tutorsCollection.findOne(query);
       res.send(result);
     })
+
+    app.get('/findTutors', async (req, res) => {
+         const search =req.query.search
+         const sort =req.query.sort
+        let options={}
+        if(sort)options={sort:{'Price.price':sort==='asc'?1:-1}}
+         let query={language:{
+          $regex:search,$options:'i'
+         }}
+
+      const result = await tutorsCollection.find(query,options).toArray()
+      res.send(result)
+    })
+
 
 
 

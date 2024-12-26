@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const corsOptions = {
-  origin: ['http://localhost:5173'],
+  origin: ['http://localhost:5173','https://nline-tutor-booking.web.app/','https://nline-tutor-booking.firebaseapp.com/','https://glittery-melomakarona-339b94.netlify.app'],
   credentials: true,
   optionalSuccessStatus: 200,
 }
@@ -45,14 +45,14 @@ const verifyToken = (req, res, next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
 
 
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     //  online_Tutors relative api

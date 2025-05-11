@@ -80,7 +80,7 @@ app.get('/logout', async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     })
-    .send({ success: true })
+    .send({ success: true  })
 })
 
 

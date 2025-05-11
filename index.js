@@ -199,7 +199,7 @@ app.get('/logout', async (req, res) => {
     // await client.close();
   }
 }
-run().catch(console.dir);
+run().catch (console.dir);
 
 
 app.get('/', (req, res) => {
